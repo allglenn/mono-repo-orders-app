@@ -14,7 +14,7 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
 
     constructor(
         protected readonly model: Model<TDocument>,
-        private readonly connection: Connection,
+        protected readonly connection: Connection,
     ) { }
 
     async create(
@@ -38,7 +38,7 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
             throw new NotFoundException('Document not found.');
         }
 
-        return document;
+        return document as TDocument;
     }
 
     async findOneAndUpdate(
