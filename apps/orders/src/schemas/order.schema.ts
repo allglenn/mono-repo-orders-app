@@ -16,4 +16,6 @@ export class Order extends AbstractDocument {
     phoneNumber: string;
 }
 
+
+
 export const OrderSchema = SchemaFactory.createForClass(Order);

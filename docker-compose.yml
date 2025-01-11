@@ -1,20 +1,41 @@
 services:
+  orders:
+    build:
+      context: .
+      dockerfile: ./apps/orders/Dockerfile
+      target: development
+    command: npm run start:dev orders
+    env_file:
+      - ./apps/orders/.env
+    depends_on:
+      - mongodb-primary
+      - mongodb-secondary
+      - mongodb-arbiter
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
   mongodb-primary:
-    image: docker.io/bitnami/mongodb:8.0
+    image: mongo:latest
+    platform: linux/arm64
     environment:
       - MONGODB_ADVERTISED_HOSTNAME=mongodb-primary
       - MONGODB_REPLICA_SET_MODE=primary
       - MONGODB_ROOT_PASSWORD=password123
       - MONGODB_REPLICA_SET_KEY=replicasetkey123
     volumes:
-      - 'mongodb_master_data:/bitnami/mongodb'
+      - 'mongodb_master_data:/data/db'  # Note: Changed path to match official mongo image
     ports:
       - '27017:27017'
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
 
   mongodb-secondary:
-    image: docker.io/bitnami/mongodb:8.0
+    image: mongo:latest
+    platform: linux/arm64
     depends_on:
       - mongodb-primary
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     environment:
       - MONGODB_ADVERTISED_HOSTNAME=mongodb-secondary
       - MONGODB_REPLICA_SET_MODE=secondary
@@ -23,9 +44,11 @@ services:
       - MONGODB_REPLICA_SET_KEY=replicasetkey123
 
   mongodb-arbiter:
-    image: docker.io/bitnami/mongodb:8.0
+    image: mongo:latest
+    platform: linux/arm64
     depends_on:
       - mongodb-primary
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     environment:
       - MONGODB_ADVERTISED_HOSTNAME=mongodb-arbiter
       - MONGODB_REPLICA_SET_MODE=arbiter
